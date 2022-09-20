@@ -1,0 +1,34 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-indentation: 4; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
+
+# Copyright (c) YEAR USER_NAME
+
+# An example of type-agnostic script/function, i.e.: the file can be run as a +x
+# script or as an autoload function.
+
+# Set the base and typically useful options
+emulate -L zsh
+setopt extendedglob warncreateglobal typesetsilent noshortloops \
+        rcquotes noautopushd multios
+
+# Run as script? ZSH_SCRIPT is a Zsh 5.3 addition
+if [[ $0 != make-server || -n $ZSH_SCRIPT ]]; then
+    # Handle $0 according to the Zsh Plugin Standard:
+    # https://zdharma-continuum.github.io/Zsh-100-Commits-Club/Zsh-Plugin-Standard.html
+    0=${${ZERO:-${0:#$ZSH_ARGZERO}}:-${(%):-%N}}
+    0=${${(M)0##/*}:-$PWD/$0}
+
+    # Such global variable is expected to be typeset'd -g in the plugin.zsh
+    # file. Here it's restored in case of the function being run as a script.
+    typeset -gA Plugins
+    Plugins[MAKE_SERVER_DIR]=${0:h}
+fi
+
+# Set path in case of other scripts being needed.
+path+=( $Plugins[MAKE_SERVER_DIR] )
+
+while ((1)); do
+    sleep 5
+done
+
+# vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]
