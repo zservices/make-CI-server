@@ -11,7 +11,7 @@
 0="${${ZERO:-${0:#$ZSH_ARGZERO}}:-${(%):-%N}}"
 0="${${(M)0:#/*}:-$PWD/$0}"
 
-MAKE_SERVER_SRC_DIRS=${~MAKE_SERVER_SRC_DIRS}
+MAKE_SERVER_SRC_DIRS=${MAKE_SERVER_SRC_DIRS//(#b)((#s)|:)\~/$match[1]$HOME}
 
 # Allow running the plugin as script if one desires (e.g. for debugging).
 # The if checks if loaded from plugin manager.
@@ -22,7 +22,10 @@ if [[ ${+zsh_loaded_plugins} == 0 || $zsh_loaded_plugins[(I)*/make-server] == 0 
 fi
 
 # Allow but strip format codes, for future expansions
-m() { print -- "${@//\{[^\}]##\}/}"; }
+m() {
+    print -- "${@//\{[^\}]##\}/}" \
+        >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile;
+}
 
 # Test to detect lack of service'' ice if loaded from a plugin manager.
 if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
@@ -37,19 +40,21 @@ typeset -gA Plugins
 Plugins+=( MAKE_SERVER_DIR $ZSRV_DIR )
 
 local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
-        logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \
-        loclogfile=$ZSRV_DIR/$ZSRV_ID.log \
-        cachelogfile=$ZSRV_CACHE/$ZSRV_ID.log \
+        srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \
+        srv_loclogfile=$ZSRV_DIR/$ZSRV_ID.log \
+        srv_cachelogfile=$ZSRV_CACHE/$ZSRV_ID.log \
         config=$ZSRV_DIR/make-server.conf
 
 if [[ -r $config ]]; then
     { local pid=$(<$pidfile); } 2>/dev/null
     if [[ ${+commands[pkill]} -eq 1 && $pid = <-> && $pid -gt 0 ]]; then
         if command pkill -HUP -x -F $pidfile; then
-            m ZSERVICE: Stopped previous make-server instance, PID: $pid >>!$logfile
+            m ZSERVICE: Stopped previous make-server instance, PID: $pid \
+                >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile
             LANG=C sleep 1.5
         else
-            noglob m ZSERVICE: Previous make-server instance (PID:$pid) not running >>!$logfile
+            noglob m ZSERVICE: Previous make-server instance (PID:$pid) not running \
+                >>!$srv_loclogfile >>!$srv_cachelogfile >>!$srv_logfile
         fi
     fi
 
@@ -58,9 +63,9 @@ if [[ -r $config ]]; then
         emulate -L zsh -o multios
         # Output to three locations, one under Zinit home, second
         # in the plugin directory, third under ZICACHE/../{service-name}.log.0
-        command mkdir -p $cachelogfile:h
-        $ZSRV_DIR/make-server $config &>>!$logfile &>>!$loclogfile \
-                            &>>!$cachelogfile &
+        command mkdir -p $srv_cachelogfile:h
+        $ZSRV_DIR/make-server $config &>>!$srv_logfile &>>!$srv_loclogfile \
+                            &>>!$srv_cachelogfile &
         # Remember PID of the server.
         ZSRV_PID=$!
     }
@@ -69,6 +74,6 @@ if [[ -r $config ]]; then
     LANG=C command sleep 0.7
     builtin return 0
 else
-    m ZSERVICE: No readable make-server.conf found, make-server did not run >>!$logfile
+    m ZSERVICE: No readable make-server.conf found, make-server did not run 
     builtin return 1
 fi

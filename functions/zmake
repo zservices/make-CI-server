@@ -1,0 +1,42 @@
+#!/usr/bin/env zsh
+# -*- mode: sh; sh-indentation: 4; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
+
+# Copyright (c) 2022 Sebastian Gniazdowski
+
+# Set the base and typically useful options
+emulate -LR zsh
+setopt extendedglob warncreateglobal typesetsilent noshortloops \
+        rcquotes noautopushd multios
+
+# Run as script? ZSH_SCRIPT is a Zsh 5.3 addition
+if [[ $0 != zmake || -n $ZSH_SCRIPT ]]; then
+    0=${${ZERO:-${0:#$ZSH_ARGZERO}}:-${(%):-%N}}
+    0=${${(M)0##/*}:-$PWD/$0}
+
+    # Such global variable is expected to be typeset'd -g in the plugin.zsh
+    # file. Here it's restored in case of the function being run as a script.
+    typeset -gA Plugins
+    Plugins[MAKE_SERVER_DIR]=${0:h}
+
+    # Allow accessing other functions as scripts.
+    local -a path
+    local PATH
+    path+=( $Plugins[MAKE_SERVER_DIR]/functions )
+fi
+
+local -a repos=( (../)#.git )
+local repo=${${${(On)repos}[1]}:h}
+repo=$repo:a
+#print -l $PWD repo:$repo / $repos
+local -a state=( $(<$repo/.mksrv-state) ) upmost=( $(<$repo/.mksrv-upmost) )
+if [[ $state[1] == ongoing ]]; then
+    print -P %B%F{70}Make is currently running…%f%b
+    tail -n 10000 -f $state[2] &
+    Plugins[MAKE_SERVER_TAIL_PID]=$!
+else
+    print -P %B%F{70}Make finished with result: %F{140}$upmost[1]%F{70}…%f%b
+    cat $repo/$upmost[3]
+    print -P %B%F{70}Make finished with result: %F{140}$upmost[1]%F{70}…%f%b
+fi
+
+# vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]

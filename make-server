@@ -27,8 +27,172 @@ fi
 # Set path in case of other scripts being needed.
 path+=( $Plugins[MAKE_SERVER_DIR] )
 
+# Allow but strip non-number format codes, for future expansions
+m() { print -P -- "${${@//\{[^0-9][^\}]##\}/}//(#b)(\{[^\}]##\})/%F$match[1]}"; }
+
+# Obtains the command to run and full path to log
+# in its directory and outputs to it plus two other
+# locations (/tmp and ~/.config/mksrv)
+run_command()
+{
+    # In case running bare script, without plugin manager
+    local ZSRV_CACHE=${ZSRV_CACHE:-${XDG_CACHE_HOME:-$HOME/.config}/makesrv}
+    local cmd=$1 prj=$2:h \
+        prjlog=$2 tmplog=/tmp/$2:t cachelog=$ZSRV_CACHE/$2:t
+    shift 2 # Now $@ contains remaining strings – command options.
+
+    if [[ $cmd = REMOVE ]]; then
+        command rm -f $tmplog $cachelog $prjlog
+        return
+    fi
+    # Run via eval to allow e.g.: cmd="env PATH=… make"
+    # or cmd="make -C …"
+    builtin eval "command $cmd $@ &>!$tmplog &>!$cachelog &>!$prjlog&"
+    # Save the PID of the background command
+    REPLY=$!
+    Plugins[MAKE_SERVER_${(U)cmd}_PID]=$REPLY
+}
+
+local -a match mbegin mend
+local MATCH; integer MBEGIN MEND
+# -T ties a comma separated scalar with an array.
+local -TUx MAKE_SERVER_SRC_DIRS in_src_dirs
+local -TUx SRC_DIRS src_dirs
+# Split the make args by tying it with array `args`
+local -T MAKE_SERVER_ARGS args
+local REPLY prj tpe prev_tpe datfle
+integer i count
+# A hash to select target file without an if.
+local -A Hash=( no-compilation .mksrv-last-null
+                clean .mksrv-last-clean
+                warnings .mksrv-last-warn
+                errors .mksrv-last-err ) \
+            Data Counts # Separate compilation counts per project
+                        # and of temporary file names.
+
+#
+# Pre-process the repositories filtering out incorrect ones.
+#
+
+# Initial check for empty input.
+if [[ -z ${MAKE_SERVER_SRC_DIRS##[[:space:]]##} ]]; then
+    m {error}Error{hi}:{msg2} No directories of projects given, \
+        nothing to manage, exiting…
+fi
+# Iterate over given dirs.
+for prj in $in_src_dirs; do
+    if [[ ! -d $prj || ! -r $prj ]]; then
+        m {error}Error{hi}:{msg2} Directory \`{dir}$prj{msg2}\` \
+            incorrect, skipping…
+    elif [[ ! -r $prj/Makefile ]]; then
+        m {error}Error{hi}:{msg2} Directory \`{dir}$prj{msg2}\` \
+            doesn\'t contain a Makefile, skipping…
+    else
+        src_dirs+=( $prj )
+    fi
+done
+
+# Final check.
+if ((!$#src_dirs)); then
+    m {error}Error{hi}:{msg2} No suitable directories found, \
+            exiting the {cmd}make-server{msg2}…
+fi
+
+# Save the processed value
+MAKE_SERVER_SRC_DIRS=$SRC_DIRS
+Plugins[MAKE_SERVER_SRC_DIRS]=$SRC_DIRS
+
+#
+# Establish make binary to use.
+#
+
+local make=make
+(($+commands[gmake]))&&make=gmake
+
+#
+# Main loop
+#
+
 while ((1)); do
     sleep 5
+    i=0
+
+    #
+    # Compile each of the projects and test their result,
+    # setting their private state files.
+    #
+
+    for prj in $src_dirs; do
+        i+=1
+
+        #
+        # (Re-)Generate the make's temp output file name if needed.
+        #
+
+        if [[ -z $Data[$prj] ]]; then
+            count=$Counts[$prj]+1
+            Data[$prj]=$(mktemp /tmp/mksrv-$count-for-$prj:t.XXX)
+            m %B{208}MAKE-SERVER%b%f: Project %B{70}$prj:t%f%b \
+                        new build %B{140}\#$count%f%b initiated.
+        fi
+        datfle=$Data[$prj]:t
+
+        #
+        # Run make catching its output.
+        #
+
+        # Three locations: /tmp, ~/.config/cache/…, and project dir
+        # via a refactored function that outputs to them.
+        print ongoing $datfle >! $prj/.mksrv-state
+        repeat 1 { run_command "$make -C $prj" $prj/$datfle ${=args[i]} }
+        wait $REPLY
+        print finished $datfle >! $prj/.mksrv-state
+
+        #
+        # Examine and move the output and set status files.
+        #
+
+        # Use one of the files with output.
+        datfle=/tmp/$datfle
+        # No file-references and no CC? -> no compilation done
+        if ! grep -E '^([^:]+:[0-9]+:[0-9]+:|[[:space:]]+CC|[[:space:]](g|)cc[[:space:]])' $datfle; then
+            tpe=no-compilation
+        # No error references? -> either a warning or a CC-only run
+        elif ! grep -qE '^([^:]+:[0-9]+:[0-9]+:.*error:)' $datfle; then
+            if grep -qE '^([^:]+:[0-9]+:[0-9]+:.*warning:)' $datfle; then
+                tpe=warnings
+            else
+                tpe=clean
+            fi
+        else
+            tpe=errors
+        fi
+
+        #
+        # Check for change to update counts and temp files.
+        #
+
+        prev_tpe=${$(<$prj/.mksrv-upmost)[1]}
+        # Update count of distinct events ignoring the no-compilation runs
+        # and also request a new temporary file generation by Data[]=.
+        if [[ $tpe != $prev_tpe && $tpe != no-compilation ]]; then
+            Counts[$prj]=$((Counts[$prj]+1))
+            Data[$prj]=
+        fi
+
+        #
+        # Save the state of the result after examination.
+        #
+
+        # Store final state and move the file.
+        command mv $datfle $prj/$Hash[$tpe]
+        if ! [[ $tpe == no-compilation && $prev_tpe == warnings ]]; then
+            print $tpe $datfle:t $Hash[$tpe]>!$prj/.mksrv-upmost
+        fi
+        # Remove the output files, whose paths are known
+        # to the `run_command` func.
+        repeat 1 { run_command REMOVE $prj/$datfle:t; }
+    done
 done
 
 # vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]
