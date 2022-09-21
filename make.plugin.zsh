@@ -21,4 +21,6 @@ Plugins[MAKE_SERVER_DIR]="${0:h}"
 # The functions/scripts provided by the plugin
 autoload -Uz zmake
 
+zmodload zsh/stat zsh/datetime
+
 # vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]

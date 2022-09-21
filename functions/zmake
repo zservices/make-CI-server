@@ -47,10 +47,37 @@ parse_opts() {
     builtin zparseopts -D -E -err=opt_err e=opt_err \
                 -warn=opt_warn w=opt_warn \
                 -clean=opt_clean c=opt_clean \
-                -info=opt_info
+                -null=opt_null n=opt_null \
+                -info=opt_info i=opt_info \
+                -help=opt_help h=opt_help
+    reply=("$@")
 }
 
-local -a opt_err opt_warn opt_clean opt_info
+past() {
+    local repo=$1 kind=$2 prefix=$1/.mksrv-last suffix file minutes
+    local -a mtime
+    local -A map=( 1 error 2 warning 4 "no notice" 8 no-action )
+    local -A file_suffix=( error err warning warn "no notice" clean no-action null )
+
+    kind=$map[$kind]
+    suffix=$file_suffix[$kind]
+    file=$prefix-$suffix
+
+    if [[ -f $file ]]; then
+        m %B{70}Last {39}$kind{70} make run:
+        builtin zstat +mtime -A mtime $file
+        minutes=$(((EPOCHSECONDS-mtime)/60))
+        builtin strftime -s mtime "%Y-%m-%d %H:%M:%S" $mtime
+        cat $file
+        info ${kind}s
+        m %B{33}Shown past make run from: {170}$mtime{33}, \
+            {70}$minutes minutes ago
+    else
+        m %B{70}No make run that finished with {140}${kind}s{70} observed yet.
+    fi
+}
+
+local -a reply opt_err opt_warn opt_clean opt_null opt_info opt_help
 # Find the main git dir uptree.
 local -a repos=( (../)#.mksrv-state(DN.) )
 # Select the shortest match.
@@ -59,23 +86,29 @@ local repo=${${${(On)repos}[1]}:h} tmp
 repo=$repo:a
 
 if [[ -z $repo ]]; then
-    m {208}%BError:{70} no make-server managed directory found in PWD uptree, exiting…%f%b
-    return
+    m {208}%BError:{70} no make-server managed directory found in PWD uptree, exiting…    return
 fi
 # Parse the --warn/-w --err/-e --clean/-c --info/-i options.
-parse_opts
+parse_opts "$@"
+set -- "$reply[@]"
 
 # Examine state.
 { local -a state=( $(<$repo/.mksrv-state) ) upmost=( $(<$repo/.mksrv-upmost) ) } 2>/dev/null
 if [[ -z $state ]]; then
-    m {174}%BNo make-server running for {70}$repo{174}… Exiting…%f%b
+    m {174}%BNo make-server running for {70}$repo{174}… Exiting…
     return
 fi
 
 upmost[1]=${${upmost[1]:#no-compilation}:-clean}
+if (( $#opt_err|$#opt_warn|$#opt_clean|$#opt_null )); then
+    past $repo $(( ${#opt_err[1][1]} + ${#opt_warn[1][1]}*2 + \
+                ${#opt_clean[1][1]}*4 + ${#opt_null[1][1]}*8))
+    return 0
+fi
+    
 # Is the compilation currently running?
 if [[ $state[1] == ongoing ]]; then
-    m %B{70}Make is running…%f%b
+    m %B{70}Make is currently still running under pid «{140}$state[3]{70}»…
     tail -n 10000 -f $state[2] &
     tmp=$!
     Plugins[MAKE_SERVER_TAIL_PID]=$tmp

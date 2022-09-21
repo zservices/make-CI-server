@@ -143,8 +143,8 @@ while ((1)); do
 
         # Three locations: /tmp, ~/.config/cache/…, and project dir
         # via a refactored function that outputs to them.
-        print ongoing $datfle >! $prj/.mksrv-state
         repeat 1 { run_command "$make -C $prj" $prj/$datfle ${=args[i]} }
+        print ongoing $datfle $REPLY >! $prj/.mksrv-state
         wait $REPLY
         print finished $datfle >! $prj/.mksrv-state
 
