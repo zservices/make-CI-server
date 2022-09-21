@@ -21,20 +21,15 @@ if [[ ${+zsh_loaded_plugins} == 0 || $zsh_loaded_plugins[(I)*/make-server] == 0 
     export ZSRV_WORK_DIR ZSRV_ID
 fi
 
-# Allow but strip format codes, for future expansions
+# Allow but strip non-number format codes, for future expansions
 m() {
-    print -- "${@//\{[^\}]##\}/}" \
+    # No redundancy – reuse…
+    $Plugins[MAKE_SERVER_DIR]/functions/m "$@" \
         >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile;
 }
 
-# Test to detect lack of service'' ice if loaded from a plugin manager.
-if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
-    m {error}Error{hi}:{msg2} plugin \`{pid}zservices/make-server{msg2}\` needs to be loaded as service, aborting.
-    return 1
-fi
-
 # Own global and exported variables.
-typeset -gx ZERO=$0 ZSRV_DIR=${0:h} ZSRV_CACHE=$ZICACHE:h/makesrv
+typeset -gx ZERO=$0 ZSRV_DIR=${0:h} ZSRV_CACHE=$ZSH_CACHE_DIR:h/makesrv
 integer -gx ZSRV_PID
 typeset -gA Plugins
 Plugins+=( MAKE_SERVER_DIR $ZSRV_DIR )
@@ -45,16 +40,20 @@ local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
         srv_cachelogfile=$ZSRV_CACHE/$ZSRV_ID.log \
         config=$ZSRV_DIR/make-server.conf
 
+# Test to detect lack of service'' ice if loaded from a plugin manager.
+if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
+    m {208}Error{39}:{70} plugin \`{174}zservices/make-server{70}\` needs to be loaded as service, aborting.
+    return 1
+fi
+
 if [[ -r $config ]]; then
     { local pid=$(<$pidfile); } 2>/dev/null
     if [[ ${+commands[pkill]} -eq 1 && $pid = <-> && $pid -gt 0 ]]; then
         if command pkill -HUP -x -F $pidfile; then
-            m ZSERVICE: Stopped previous make-server instance, PID: $pid \
-                >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile
+            m ZSERVICE: Stopped previous make-server instance, PID: $pid
             LANG=C sleep 1.5
         else
-            noglob m ZSERVICE: Previous make-server instance (PID:$pid) not running \
-                >>!$srv_loclogfile >>!$srv_cachelogfile >>!$srv_logfile
+            noglob m ZSERVICE: Previous make-server instance (PID:$pid) not running.
         fi
     fi
 
@@ -64,7 +63,7 @@ if [[ -r $config ]]; then
         # Output to three locations, one under Zinit home, second
         # in the plugin directory, third under ZICACHE/../{service-name}.log.0
         command mkdir -p $srv_cachelogfile:h
-        $ZSRV_DIR/make-server $config &>>!$srv_logfile &>>!$srv_loclogfile \
+        command $ZSRV_DIR/make-server $config &>>!$srv_logfile &>>!$srv_loclogfile \
                             &>>!$srv_cachelogfile &
         # Remember PID of the server.
         ZSRV_PID=$!

@@ -24,13 +24,11 @@ if [[ $0 != make-server || -n $ZSH_SCRIPT ]]; then
     Plugins[MAKE_SERVER_DIR]=${0:h}
 
     # Allow accessing other functions as scripts.
-    local -a path
-    local PATH
-    path+=( $Plugins[MAKE_SERVER_DIR]/functions )
 fi
 
 # Set path in case of other scripts being needed.
-path+=( $Plugins[MAKE_SERVER_DIR] )
+local -aU path; local -U PATH
+path+=( $Plugins[MAKE_SERVER_DIR]/functions )
 
 # Obtains the command to run and full path to log
 # in its directory and outputs to it plus two other
@@ -78,16 +76,16 @@ local -A Hash=( no-compilation .mksrv-last-null
 
 # Initial check for empty input.
 if [[ -z ${MAKE_SERVER_SRC_DIRS##[[:space:]]##} ]]; then
-    m {error}Error{hi}:{msg2} No directories of projects given, \
+    m {208}Error{39}:{70} No directories of projects given, \
         nothing to manage, exiting…
 fi
 # Iterate over given dirs.
 for prj in $in_src_dirs; do
     if [[ ! -d $prj || ! -r $prj ]]; then
-        m {error}Error{hi}:{msg2} Directory \`{dir}$prj{msg2}\` \
+        m {208}Error{39}:{70} Directory \`{dir}$prj{70}\` \
             incorrect, skipping…
     elif [[ ! -r $prj/Makefile ]]; then
-        m {error}Error{hi}:{msg2} Directory \`{dir}$prj{msg2}\` \
+        m {208}Error{39}:{70} Directory \`{dir}$prj{70}\` \
             doesn\'t contain a Makefile, skipping…
     else
         src_dirs+=( $prj )
@@ -96,8 +94,8 @@ done
 
 # Final check.
 if ((!$#src_dirs)); then
-    m {error}Error{hi}:{msg2} No suitable directories found, \
-            exiting the {cmd}make-server{msg2}…
+    m {208}Error{39}:{70} No suitable directories found, \
+            exiting the {cmd}make-server{70}…
 fi
 
 # Save the processed value

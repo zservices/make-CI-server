@@ -2,4 +2,4 @@
 emulate -L zsh -o extendedglob
 
 # Allow but strip non-number format codes, for future expansions
-print -P -- "${${@//\{[^0-9][^\}]##\}/}//(#b)(\{[^\}]##\})/%F$match[1]}"
+print -P -- "${${@//\{[^0-9][^\}]##\}/}//(#b)(\{[^\}]##\})/%F$match[1]}%f%b"
