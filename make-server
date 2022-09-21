@@ -22,13 +22,15 @@ if [[ $0 != make-server || -n $ZSH_SCRIPT ]]; then
     # file. Here it's restored in case of the function being run as a script.
     typeset -gA Plugins
     Plugins[MAKE_SERVER_DIR]=${0:h}
+
+    # Allow accessing other functions as scripts.
+    local -a path
+    local PATH
+    path+=( $Plugins[MAKE_SERVER_DIR]/functions )
 fi
 
 # Set path in case of other scripts being needed.
 path+=( $Plugins[MAKE_SERVER_DIR] )
-
-# Allow but strip non-number format codes, for future expansions
-m() { print -P -- "${${@//\{[^0-9][^\}]##\}/}//(#b)(\{[^\}]##\})/%F$match[1]}"; }
 
 # Obtains the command to run and full path to log
 # in its directory and outputs to it plus two other

@@ -6,7 +6,7 @@
 # Set the base and typically useful options
 emulate -LR zsh
 setopt extendedglob warncreateglobal typesetsilent noshortloops \
-        rcquotes noautopushd multios
+        rcquotes noautopushd multios nomonitor
 
 # Run as script? ZSH_SCRIPT is a Zsh 5.3 addition
 if [[ $0 != zmake || -n $ZSH_SCRIPT ]]; then
@@ -24,19 +24,41 @@ if [[ $0 != zmake || -n $ZSH_SCRIPT ]]; then
     path+=( $Plugins[MAKE_SERVER_DIR]/functions )
 fi
 
+wait_for_tail() {
+    local state
+    integer cnt
+    while ((1)); do
+        LANG=C command sleep 0.5
+        state=( $(<$1/.mksrv-state) )
+        if [[ $state[1] == finished || $cnt -gt 400 ]]; then
+            kill -INT $Plugins[MAKE_SERVER_TAIL_PID]
+            return
+        fi
+        cnt+=1
+    done
+}
+
+info() {
+    print -P %B%F{70}Make finished with result: %F{140}$1%F{70}.%f%b
+}
 local -a repos=( (../)#.git )
-local repo=${${${(On)repos}[1]}:h}
+local repo=${${${(On)repos}[1]}:h} tmp
 repo=$repo:a
-#print -l $PWD repo:$repo / $repos
+
 local -a state=( $(<$repo/.mksrv-state) ) upmost=( $(<$repo/.mksrv-upmost) )
 if [[ $state[1] == ongoing ]]; then
     print -P %B%F{70}Make is currently running…%f%b
     tail -n 10000 -f $state[2] &
-    Plugins[MAKE_SERVER_TAIL_PID]=$!
+    tmp=$!
+    Plugins[MAKE_SERVER_TAIL_PID]=$tmp
+    wait_for_tail $repo
+    LANG=C command sleep 0.5
+    upmost=( $(<$repo/.mksrv-upmost) )
+    info $upmost[1]
 else
-    print -P %B%F{70}Make finished with result: %F{140}$upmost[1]%F{70}…%f%b
+    info $upmost[1]
     cat $repo/$upmost[3]
-    print -P %B%F{70}Make finished with result: %F{140}$upmost[1]%F{70}…%f%b
+    info $upmost[1]
 fi
 
 # vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]
