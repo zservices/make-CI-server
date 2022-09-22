@@ -189,6 +189,7 @@ while ((1)); do
         if ! [[ $tpe == no-compilation && $prev_tpe == warnings ]]; then
             print $tpe $datfle:t $Hash[$tpe]>!$prj/.mksrv-upmost
         fi
+        m {208}MAKE-SERVER:%f Build of {39}$prj:t%f finished with result: {140}$tpe%f.
         # Remove the output files, whose paths are known
         # to the `run_command` func.
         repeat 1 { run_command REMOVE $prj/$datfle:t; }
