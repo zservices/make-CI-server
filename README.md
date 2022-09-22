@@ -20,7 +20,7 @@ instance per all active Zsh sessions, in background. zinit supports this, just
 add:
 
 ```zsh
-zinit param'MAKE_SERVER_SRC_DIRS->{path to project}' service'make' \
+zinit param'MAKE_SERVER_SRC_DIRS->{path to project:path to project:…}' service'make' \
         zservices/make-server
 ```
 
