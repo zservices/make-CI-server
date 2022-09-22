@@ -18,12 +18,12 @@ if [[ $0 != zmake || -n $ZSH_SCRIPT ]]; then
     # Such global variable is expected to be typeset'd -g in the plugin.zsh
     # file. Here it's restored in case of the function being run as a script.
     typeset -gA Plugins
-    Plugins[MAKE_SERVER_DIR]=${0:h}
+    Plugins[MSERV_DIR]=${0:h}
 fi
 
 # Allow accessing other functions as scripts.
 local -aU path=( $path ); local -xU PATH=$PATH
-path+=( $Plugins[MAKE_SERVER_DIR]/functions )
+path+=( $Plugins[MSERV_DIR]/functions )
 
 # Wait for finished state in order to close `tail`.
 wait_for_tail() {
@@ -33,7 +33,7 @@ wait_for_tail() {
         LANG=C command sleep 0.3
         state=( $(<$1/.mksrv-state) )
         if [[ $state[1] == finished || $cnt -gt 400 ]]; then
-            kill -INT $Plugins[MAKE_SERVER_TAIL_PID]
+            kill -INT $Plugins[MSERV_TAIL_PID]
             return
         fi
         cnt+=1
@@ -42,15 +42,17 @@ wait_for_tail() {
 
 # A message on the type of run and its time.
 info() {
-    local tpe=$1 prj=$2 minutes
+    local tpe=$1 rtpe=$1 prj=$2 minutes
     local -a mtime 
-    builtin zstat +mtime -A mtime $prj/.mksrv-last-$tpe
+    rtpe=${${tpe:#no-compilation}:-null}
+    builtin zstat +mtime -A mtime $prj/.mksrv-last-$rtpe
     minutes=$(((EPOCHSECONDS-mtime)/60))
     # clean → no notices
     tpe=${${tpe:#clean}:-"no notices"}
 
     m %B{39}MAKE{70} finished with result: {183}${(U)tpe}\
-        {39}$minutes minutes ago{70}.%f%b
+        {39}$minutes minutes ago{70}.
+
 }
 
 parse_opts() {
@@ -67,8 +69,8 @@ parse_opts() {
 past() {
     local repo=$1 kind=$2 prefix=$1/.mksrv-last suffix file minutes
     local -a mtime
-    local -A map=( 1 error 2 warning 4 "no notice" 8 no-action )
-    local -A file_suffix=( error err warning warn "no notice" clean no-action null )
+    local -A map=( 1 error 2 warning 4 "no notice" 8 no-compilation )
+    local -A file_suffix=( error err warning warn "no notice" clean no-compilation null )
 
     kind=$map[$kind]
     suffix=$file_suffix[$kind]
@@ -79,8 +81,8 @@ past() {
         builtin zstat +mtime -A mtime $file
         builtin strftime -s mtime "%Y-%m-%d %H:%M:%S" $mtime
         cat $file
-        info $suffix $repo
-        m %B{33}Shown past make run from: {170}$mtime
+        info $kind $repo
+        m %B{33}Printed past make run from: {170}$mtime
     else
         m %B{70}No make run that finished with {140}${kind}s{70} observed yet.
     fi
@@ -107,14 +109,14 @@ if [[ -z $REPLY ]]; then
     find_repo Makefile
     repo=$REPLY
     if [[ -z $repo ]]; then
-        m {208}%BError:{70} no make-server managed directory found in PWD uptree, exiting…
+        m {208}%BError:%f%b no {140}make-server%f managed directory nor regular {39}Makefile%f project found in PWD and uptree, exiting…
     else
-        m {208}%BWarning:{70} the project {140}$repo:t{70} isn\'t managed \
-            by {220}make-server{70}, running {39}make {70}directly…
+        m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
+            by {220}make-server%f, running {39}make %fdirectly…
         sleep 1
         command make -C $repo
-        m {208}%BWarning:{70} the project {140}$repo:t{70} isn\'t managed \
-            by {220}make-server{70}, was running {39}make {70}directly…
+        m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
+            by {220}make-server%f, was running {39}make %fdirectly…
     fi
     return
 fi
@@ -131,24 +133,23 @@ if [[ -z $state ]]; then
     return
 fi
 
-upmost[1]=${${upmost[1]:#no-compilation}:-clean}
+#upmost[1]=${${upmost[1]:#no-compilation}:-null}
 if (( $#opt_err|$#opt_warn|$#opt_clean|$#opt_null )); then
     past $repo $(( ${#opt_err[1][1]} + ${#opt_warn[1][1]}*2 + \
                 ${#opt_clean[1][1]}*4 + ${#opt_null[1][1]}*8))
     return 0
 fi
-    
+
 # Is the compilation currently running?
 if [[ $state[1] == ongoing ]]; then
     m %B{70}Make is currently still running under pid «{140}$state[3]{70}»…
     tail -n 10000 -f $state[2] &
     tmp=$!
     # Cannot assign directly
-    Plugins[MAKE_SERVER_TAIL_PID]=$tmp
+    Plugins[MSERV_TAIL_PID]=$tmp
     wait_for_tail $repo
     LANG=C command sleep 0.5
     upmost=( $(<$repo/.mksrv-upmost) )
-    upmost[1]=${${upmost[1]:#no-compilation}:-clean}
     info $upmost[1] $repo
 # No – then get last make run output.
 else
