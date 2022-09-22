@@ -16,11 +16,14 @@ if [[ ${zsh_loaded_plugins[-1]} != */make-server && -z ${fpath[(r)${0:h}]} ]] {
 
 # Standard hash for plugins, to not pollute the namespace
 typeset -gA Plugins
-Plugins[MAKE_SERVER_DIR]="${0:h}"
+Plugins[MSRV_DIR]="${0:h}"
 
 # The functions/scripts provided by the plugin
 autoload -Uz zmake
 
 zmodload zsh/stat zsh/datetime
 
+if [[ -n $MSRV_SETUP_ALIAS ]]; then
+    alias make=zmake
+fi
 # vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]

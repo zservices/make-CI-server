@@ -11,7 +11,7 @@
 0="${${ZERO:-${0:#$ZSH_ARGZERO}}:-${(%):-%N}}"
 0="${${(M)0:#/*}:-$PWD/$0}"
 
-MAKE_SERVER_SRC_DIRS=${MAKE_SERVER_SRC_DIRS//(#b)((#s)|:)\~/$match[1]$HOME}
+MSRV_SRC_DIRS=${MSRV_SRC_DIRS//(#b)((#s)|:)\~/$match[1]$HOME}
 
 # Allow running the plugin as script if one desires (e.g. for debugging).
 # The if checks if loaded from plugin manager.
@@ -24,7 +24,7 @@ fi
 # Allow but strip non-number format codes, for future expansions
 m() {
     # No redundancy – reuse…
-    $Plugins[MAKE_SERVER_DIR]/functions/m "$@" \
+    $Plugins[MSRV_DIR]/functions/m "$@" \
         >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile;
 }
 
@@ -32,7 +32,7 @@ m() {
 typeset -gx ZERO=$0 ZSRV_DIR=${0:h} ZSRV_CACHE=$ZSH_CACHE_DIR:h/makesrv
 integer -gx ZSRV_PID
 typeset -gA Plugins
-Plugins+=( MAKE_SERVER_DIR $ZSRV_DIR )
+Plugins+=( MSRV_DIR $ZSRV_DIR )
 
 local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
         srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \

@@ -21,14 +21,14 @@ if [[ $0 != make-server || -n $ZSH_SCRIPT ]]; then
     # Such global variable is expected to be typeset'd -g in the plugin.zsh
     # file. Here it's restored in case of the function being run as a script.
     typeset -gA Plugins
-    Plugins[MAKE_SERVER_DIR]=${0:h}
+    Plugins[MSRV_DIR]=${0:h}
 
     # Allow accessing other functions as scripts.
 fi
 
 # Set path in case of other scripts being needed.
 local -aU path; local -U PATH
-path+=( $Plugins[MAKE_SERVER_DIR]/functions )
+path+=( $Plugins[MSRV_DIR]/functions )
 
 # Obtains the command to run and full path to log
 # in its directory and outputs to it plus two other
@@ -50,16 +50,16 @@ run_command()
     builtin eval "command $cmd $@ &>!$tmplog &>!$cachelog &>!$prjlog&"
     # Save the PID of the background command
     REPLY=$!
-    Plugins[MAKE_SERVER_${(U)cmd}_PID]=$REPLY
+    Plugins[MSRV_${(U)cmd}_PID]=$REPLY
 }
 
 local -a match mbegin mend
 local MATCH; integer MBEGIN MEND
 # -T ties a comma separated scalar with an array.
-local -TUx MAKE_SERVER_SRC_DIRS in_src_dirs
+local -TUx MSRV_SRC_DIRS in_src_dirs
 local -TUx SRC_DIRS src_dirs
 # Split the make args by tying it with array `args`
-local -T MAKE_SERVER_ARGS args
+local -T MSRV_ARGS args
 local REPLY prj tpe prev_tpe datfle
 integer i count
 # A hash to select target file without an if.
@@ -75,7 +75,7 @@ local -A Hash=( no-compilation .mksrv-last-null
 #
 
 # Initial check for empty input.
-if [[ -z ${MAKE_SERVER_SRC_DIRS##[[:space:]]##} ]]; then
+if [[ -z ${MSRV_SRC_DIRS##[[:space:]]##} ]]; then
     m {208}Error{39}:{70} No directories of projects given, \
         nothing to manage, exiting…
 fi
@@ -99,8 +99,8 @@ if ((!$#src_dirs)); then
 fi
 
 # Save the processed value
-MAKE_SERVER_SRC_DIRS=$SRC_DIRS
-Plugins[MAKE_SERVER_SRC_DIRS]=$SRC_DIRS
+MSRV_SRC_DIRS=$SRC_DIRS
+Plugins[MSRV_SRC_DIRS]=$SRC_DIRS
 
 #
 # Establish make binary to use.
