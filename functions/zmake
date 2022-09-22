@@ -44,11 +44,12 @@ wait_for_tail() {
 info() {
     local tpe=$1 rtpe=$1 prj=$2 minutes
     local -a mtime 
+    local -A map=( err errors warn warnings \
+                 clean "no notices" null "no compilation" )
     rtpe=${${tpe:#no-compilation}:-null}
+    tpe=$map[$tpe]
     builtin zstat +mtime -A mtime $prj/.mksrv-last-$rtpe
     minutes=$(((EPOCHSECONDS-mtime)/60))
-    # clean → no notices
-    tpe=${${tpe:#clean}:-"no notices"}
 
     m %B{39}MAKE{70} finished with result: {183}${(U)tpe}\
         {39}$minutes minutes ago{70}.
@@ -69,8 +70,9 @@ parse_opts() {
 past() {
     local repo=$1 kind=$2 prefix=$1/.mksrv-last suffix file minutes
     local -a mtime
-    local -A map=( 1 error 2 warning 4 "no notice" 8 no-compilation )
-    local -A file_suffix=( error err warning warn "no notice" clean no-compilation null )
+    local -A map=( 1 errors 2 warnings 4 "no notices" 8 "no actions" )
+    local -A file_suffix=( errors err warnings warn 
+                         "no notices" clean "no actions" null )
 
     kind=$map[$kind]
     suffix=$file_suffix[$kind]
@@ -81,10 +83,10 @@ past() {
         builtin zstat +mtime -A mtime $file
         builtin strftime -s mtime "%Y-%m-%d %H:%M:%S" $mtime
         cat $file
-        info $kind $repo
+        info $suffix $repo
         m %B{33}Printed past make run from: {170}$mtime
     else
-        m %B{70}No make run that finished with {140}${kind}s{70} observed yet.
+        m %B{70}No make run that finished with {140}${kind}{70} observed yet.
     fi
 }
 

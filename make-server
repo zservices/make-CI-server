@@ -63,10 +63,10 @@ local -T MSERV_ARGS args
 local REPLY prj tpe prev_tpe datfle
 integer i count
 # A hash to select target file without an if.
-local -A Hash=( no-compilation .mksrv-last-null
+local -A Hash=( null .mksrv-last-null
                 clean .mksrv-last-clean
-                warnings .mksrv-last-warn
-                errors .mksrv-last-err ) \
+                warn .mksrv-last-warn
+                err .mksrv-last-err ) \
             Data Counts # Separate compilation counts per project
                         # and of temporary file names.
 
@@ -156,16 +156,16 @@ while ((1)); do
         datfle=/tmp/$datfle
         # No file-references and no CC? -> no compilation done
         if ! grep -qE '^([^:]+:[0-9]+:[0-9]+:|[[:space:]]+CC|[[:space:]](g|)cc[[:space:]])' $datfle; then
-            tpe=no-compilation
+            tpe=null
         # No error references? -> either a warning or a CC-only run
         elif ! grep -qE '^([^:]+:[0-9]+:[0-9]+:.*error:)' $datfle; then
             if grep -qE '^([^:]+:[0-9]+:[0-9]+:.*warning:)' $datfle; then
-                tpe=warnings
+                tpe=warn
             else
                 tpe=clean
             fi
         else
-            tpe=errors
+            tpe=err
         fi
 
         #
@@ -173,9 +173,9 @@ while ((1)); do
         #
 
         prev_tpe=${$(<$prj/.mksrv-upmost)[1]}
-        # Update count of distinct events ignoring the no-compilation runs
+        # Update count of distinct events ignoring the null runs
         # and also request a new temporary file generation by Data[]=.
-        if [[ $tpe != $prev_tpe && $tpe != no-compilation ]]; then
+        if [[ $tpe != $prev_tpe && $tpe != null ]]; then
             Counts[$prj]=$((Counts[$prj]+1))
             Data[$prj]=
         fi
@@ -186,7 +186,7 @@ while ((1)); do
 
         # Store final state and move the file.
         command mv $datfle $prj/$Hash[$tpe]
-        if ! [[ $tpe == no-compilation && $prev_tpe == (warnings|clean) ]]; then
+        if ! [[ $tpe == null && $prev_tpe == (warn|clean) ]]; then
             print $tpe $datfle:t $Hash[$tpe]>!$prj/.mksrv-upmost
         fi
         m {208}MAKE-SERVER:%f Build of {39}$prj:t%f finished with result: {140}$tpe%f.
