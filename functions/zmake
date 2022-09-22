@@ -22,14 +22,15 @@ if [[ $0 != zmake || -n $ZSH_SCRIPT ]]; then
 fi
 
 # Allow accessing other functions as scripts.
-local -aU path=( $path ); local -U PATH=$PATH
+local -aU path=( $path ); local -xU PATH=$PATH
 path+=( $Plugins[MAKE_SERVER_DIR]/functions )
 
+# Wait for finished state in order to close `tail`.
 wait_for_tail() {
     local state
     integer cnt
     while ((1)); do
-        LANG=C command sleep 0.5
+        LANG=C command sleep 0.3
         state=( $(<$1/.mksrv-state) )
         if [[ $state[1] == finished || $cnt -gt 400 ]]; then
             kill -INT $Plugins[MAKE_SERVER_TAIL_PID]
@@ -39,8 +40,17 @@ wait_for_tail() {
     done
 }
 
+# A message on the type of run and its time.
 info() {
-    m %B{39}MAKE{70} finished with result: {183}${(U)1}{70}.%f%b
+    local tpe=$1 prj=$2 minutes
+    local -a mtime 
+    builtin zstat +mtime -A mtime $prj/.mksrv-last-$tpe
+    minutes=$(((EPOCHSECONDS-mtime)/60))
+    # clean → no notices
+    tpe=${${tpe:#clean}:-"no notices"}
+
+    m %B{39}MAKE{70} finished with result: {183}${(U)tpe}\
+        {39}$minutes minutes ago{70}.%f%b
 }
 
 parse_opts() {
@@ -53,6 +63,7 @@ parse_opts() {
     reply=("$@")
 }
 
+# Print last run of given type.
 past() {
     local repo=$1 kind=$2 prefix=$1/.mksrv-last suffix file minutes
     local -a mtime
@@ -66,28 +77,49 @@ past() {
     if [[ -f $file ]]; then
         m %B{70}Last {39}$kind{70} make run:
         builtin zstat +mtime -A mtime $file
-        minutes=$(((EPOCHSECONDS-mtime)/60))
         builtin strftime -s mtime "%Y-%m-%d %H:%M:%S" $mtime
         cat $file
-        info ${kind}s
-        m %B{33}Shown past make run from: {170}$mtime{33}, \
-            {70}$minutes minutes ago
+        info $suffix $repo
+        m %B{33}Shown past make run from: {170}$mtime
     else
         m %B{70}No make run that finished with {140}${kind}s{70} observed yet.
     fi
 }
 
-local -a reply opt_err opt_warn opt_clean opt_null opt_info opt_help
-# Find the main git dir uptree.
-local -a repos=( (../)#.mksrv-state(DN.) )
-# Select the shortest match.
-local repo=${${${(On)repos}[1]}:h} tmp
-# Remove any ../ from it.
-repo=$repo:a
+find_repo() {
+    # Default empty return.
+    REPLY=
+    # Find the main git dir uptree.
+    local -a repos=( (../)#$1(DN.) )
+    (($#repos)) || return 1
+    # Select the shortest match.
+    REPLY=${${${(On)repos}[1]}:h}
+    # Remove any ../ from it.
+    REPLY=$REPLY:a
 
-if [[ -z $repo ]]; then
-    m {208}%BError:{70} no make-server managed directory found in PWD uptree, exiting…    return
+}
+local -a reply opt_err opt_warn opt_clean opt_null opt_info opt_help
+local tmp repo
+
+find_repo .mksrv-state
+
+if [[ -z $REPLY ]]; then
+    find_repo Makefile
+    repo=$REPLY
+    if [[ -z $repo ]]; then
+        m {208}%BError:{70} no make-server managed directory found in PWD uptree, exiting…
+    else
+        m {208}%BWarning:{70} the project {140}$repo:t{70} isn\'t managed \
+            by {220}make-server{70}, running {39}make {70}directly…
+        sleep 1
+        command make -C $repo
+        m {208}%BWarning:{70} the project {140}$repo:t{70} isn\'t managed \
+            by {220}make-server{70}, was running {39}make {70}directly…
+    fi
+    return
 fi
+
+repo=$REPLY
 # Parse the --warn/-w --err/-e --clean/-c --info/-i options.
 parse_opts "$@"
 set -- "$reply[@]"
@@ -111,17 +143,18 @@ if [[ $state[1] == ongoing ]]; then
     m %B{70}Make is currently still running under pid «{140}$state[3]{70}»…
     tail -n 10000 -f $state[2] &
     tmp=$!
+    # Cannot assign directly
     Plugins[MAKE_SERVER_TAIL_PID]=$tmp
     wait_for_tail $repo
     LANG=C command sleep 0.5
     upmost=( $(<$repo/.mksrv-upmost) )
     upmost[1]=${${upmost[1]:#no-compilation}:-clean}
-    info $upmost[1]
+    info $upmost[1] $repo
 # No – then get last make run output.
 else
-    info $upmost[1]
+    info $upmost[1] $repo
     cat $repo/$upmost[3]
-    info $upmost[1]
+    info $upmost[1] $repo
 fi
 
 # vim:ft=zsh:tw=80:sw=4:sts=4:et:foldmarker=[[[,]]]
