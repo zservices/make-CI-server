@@ -16,10 +16,10 @@ if [[ ${zsh_loaded_plugins[-1]} != */make-server && -z ${fpath[(r)${0:h}]} ]] {
 
 # Standard hash for plugins, to not pollute the namespace
 typeset -gA Plugins
-Plugins[MSERV_DIR]="${0:h}"
-Plugins[MSERV_INTERVAL]="${MSERV_INTERVAL:=5}"
-Plugins[MSERV_SRC_DIRS]="$MSERV_SRC_DIRS"
-Plugins[MSERV_ARGS]="$MSERV_ARGS"
+Plugins+=( MSERV_DIR "${0:h}"
+    MSERV_INTERVAL "${MSERV_INTERVAL:=5}"
+    MSERV_SRC_DIRS "$MSERV_SRC_DIRS"
+    MSERV_ARGS "$MSERV_ARGS" )
 
 export MSERV_DIR MSERV_INTERVAL MSERV_SRC_DIRS MSERV_ARGS
 

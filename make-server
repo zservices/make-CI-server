@@ -114,7 +114,7 @@ local make=make
 #
 
 while ((1)); do
-    sleep 5
+    sleep $MSERV_INTERVAL
     i=0
 
     #

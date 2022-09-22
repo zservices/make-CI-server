@@ -32,7 +32,12 @@ m() {
 typeset -gx ZERO=$0 ZSRV_DIR=${0:h} ZSRV_CACHE=$ZSH_CACHE_DIR:h/makesrv
 integer -gx ZSRV_PID
 typeset -gA Plugins
-Plugins+=( MSERV_DIR $ZSRV_DIR )
+Plugins+=( MSERV_DIR "$ZSRV_DIR" 
+    MSERV_INTERVAL "${MSERV_INTERVAL:=5}"
+    MSERV_SRC_DIRS "$MSERV_SRC_DIRS"
+    MSERV_ARGS "$MSERV_ARGS" )
+
+export MSERV_DIR MSERV_INTERVAL MSERV_SRC_DIRS MSERV_ARGS
 
 local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
         srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \
