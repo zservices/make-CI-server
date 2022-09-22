@@ -46,7 +46,6 @@ info() {
     local -a mtime 
     local -A map=( err errors warn warnings \
                  clean "no notices" null "no compilation" )
-    rtpe=${${tpe:#no-compilation}:-null}
     tpe=$map[$tpe]
     builtin zstat +mtime -A mtime $prj/.mksrv-last-$rtpe
     minutes=$(((EPOCHSECONDS-mtime)/60))
