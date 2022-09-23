@@ -1,4 +1,4 @@
-# redis
+# make-server
 
 Make server that runs in background for configured projects and periodically
 builds them (i.e.: executes `make`) catching its output and exposing them
