@@ -65,6 +65,22 @@ parse_opts() {
     reply=("$@")
 }
 
+help() {
+    m %B{140}Usage: {39}zmake {70}-h{140}/{70}--help \
+        -c{140}/{70}--clean \
+        -e{140}/{70}--err \
+        -w{140}/{70}--warn \
+        -n{140}/{70}--null
+    m  '\n {70}-h{140}/{70}--help%f       This message\n' \
+        '{70}-c{140}/{70}--clean%f      Last clean build (no errors but with compile actions)\n' \
+        '{70}-e{140}/{70}--err%f        Last build with errors\n' \
+        '{70}-w{140}/{70}--warn%f       Last build with warnings\n' \
+        '{70}-n{140}/{70}--null%f       Last no-actions make output'
+    m '%B\n{39}zmake%f%b without arguments will either:\n' \
+        '{70}-%f show most recent build\n' \
+        '{70}-%f tail on currently ongoing build'
+}
+
 # Print last run of given type.
 past() {
     local repo=$1 kind=$2 prefix=$1/.mksrv-last suffix file minutes
@@ -104,6 +120,14 @@ find_repo() {
 local -a reply opt_err opt_warn opt_clean opt_null opt_info opt_help
 local tmp repo
 
+parse_opts "$@"
+set -- "$reply[@]"
+
+if (( $#opt_help )); then
+    help
+    return 01
+fi
+
 find_repo .mksrv-state
 
 if [[ -z $REPLY ]]; then
@@ -124,8 +148,6 @@ fi
 
 repo=$REPLY
 # Parse the --warn/-w --err/-e --clean/-c --info/-i options.
-parse_opts "$@"
-set -- "$reply[@]"
 
 # Examine state.
 { local -a state=( $(<$repo/.mksrv-state) ) upmost=( $(<$repo/.mksrv-upmost) ) } 2>/dev/null
