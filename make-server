@@ -26,6 +26,9 @@ if [[ $0 != make-server || -n $ZSH_SCRIPT ]]; then
     # Allow accessing other functions as scripts.
 fi
 
+{ zmodload zsh/system && zsystem supports flock
+  Plugins+=( MSERV_FLOCK_AVAIL $((!$?)) ); } &>/dev/null
+
 # Set path in case of other scripts being needed.
 local -aU path; local -U PATH
 path+=( $Plugins[MSERV_DIR]/functions )
@@ -58,10 +61,8 @@ local MATCH; integer MBEGIN MEND
 # -T ties a comma separated scalar with an array.
 local -TUx MSERV_SRC_DIRS in_src_dirs
 local -TUx SRC_DIRS src_dirs
-# Split the make args by tying it with array `args`
-local -T MSERV_ARGS args
 local REPLY prj tpe prev_tpe datfle
-integer i count
+integer i count lockfd
 # A hash to select target file without an if.
 local -A Hash=( null .mksrv-last-null
                 clean .mksrv-last-clean
@@ -98,9 +99,13 @@ if ((!$#src_dirs)); then
             exiting the {cmd}make-server{70}…
 fi
 
-# Save the processed value
-MSERV_SRC_DIRS=$SRC_DIRS
+# Save the processed value and other Plugins hash fields.
 Plugins[MSERV_SRC_DIRS]=$SRC_DIRS
+Plugins[MSERV_LOCK_FILE]=.mksrv-upmost
+Plugins[MSERV_INTERVAL]=${MSERV_INTERVAL:=5}
+# Split the make args by tying it with array `args`
+local -T MSERV_ARGS args
+Plugins[MSERV_ARGS]=$MSERV_ARGS
 
 #
 # Establish make binary to use.
@@ -114,7 +119,7 @@ local make=make
 #
 
 while ((1)); do
-    sleep $MSERV_INTERVAL
+    sleep $Plugins[MSERV_INTERVAL]
     i=0
 
     #
@@ -136,6 +141,20 @@ while ((1)); do
                         new build %B{140}\#$count%f%b initiated.
         fi
         datfle=$Data[$prj]:t
+
+        # Check if any explicit (-f) make is running.
+        while ((1)); do
+                lockfd=1337
+                if ! zsystem flock -f lockfd -t 0 $prj/$Plugins[MSERV_LOCK_FILE] &>/dev/null
+                then
+                    if (($?==2)) || [[ -f $prj/.mksrv-lock ]]; then
+                        m {208}Warning:%f waiting for explicit {39}make%f to finish…
+                        sleep 1
+                        continue
+                    fi
+                fi
+            break
+        done
 
         #
         # Run make catching its output.
@@ -189,10 +208,11 @@ while ((1)); do
         if ! [[ $tpe == null && $prev_tpe == (warn|clean) ]]; then
             print $tpe $datfle:t $Hash[$tpe]>!$prj/.mksrv-upmost
         fi
-        m {208}MAKE-SERVER:%f Build of {39}$prj:t%f finished with result: {140}$tpe%f.
+        m {208}MAKE-SERVER:%f Build of {39}$prj:t%f finished with result: %B{140}$tpe%f.
         # Remove the output files, whose paths are known
         # to the `run_command` func.
         repeat 1 { run_command REMOVE $prj/$datfle:t; }
+        {exec {lockfd}>&-;}&>/dev/null
     done
 done
 

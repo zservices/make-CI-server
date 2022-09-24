@@ -21,6 +21,11 @@ if [[ $0 != zmake || -n $ZSH_SCRIPT ]]; then
     Plugins[MSERV_DIR]=${0:h}
 fi
 
+{ zmodload zsh/system && zsystem supports flock
+  Plugins+=( MSERV_FLOCK_AVAIL $((!$?)) ); } &>/dev/null
+
+Plugins[MSERV_LOCK_FILE]=.mksrv-upmost
+
 # Allow accessing other functions as scripts.
 local -aU path=( $path ); local -xU PATH=$PATH
 path+=( $Plugins[MSERV_DIR]/functions )
@@ -52,7 +57,6 @@ info() {
 
     m %B{39}MAKE{70} finished with result: {183}${(U)tpe}\
         {39}$minutes minutes ago{70}.
-
 }
 
 parse_opts() {
@@ -61,6 +65,7 @@ parse_opts() {
                 -clean=opt_clean c=opt_clean \
                 -null=opt_null n=opt_null \
                 -info=opt_info i=opt_info \
+                -forward=opt_forw f=opt_forw \
                 -help=opt_help h=opt_help
     reply=("$@")
 }
@@ -117,8 +122,9 @@ find_repo() {
     REPLY=$REPLY:a
 
 }
-local -a reply opt_err opt_warn opt_clean opt_null opt_info opt_help
-local tmp repo
+
+local -a reply opt_err opt_warn opt_clean opt_null opt_info opt_forw opt_help
+local tmp repo rmake=0
 
 parse_opts "$@"
 set -- "$reply[@]"
@@ -130,18 +136,44 @@ fi
 
 find_repo .mksrv-state
 
-if [[ -z $REPLY ]]; then
+if [[ -z $REPLY ]] || (($#opt_forw)); then
     find_repo Makefile
     repo=$REPLY
     if [[ -z $repo ]]; then
         m {208}%BError:%f%b no {140}make-server%f managed directory nor regular {39}Makefile%f project found in PWD and uptree, exiting…
     else
-        m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
+        if (( !$#opt_forw )); then
+            m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
             by {220}make-server%f, running {39}make %fdirectly…
-        sleep 1
-        command make -C $repo
-        m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
-            by {220}make-server%f, was running {39}make %fdirectly…
+            sleep 1
+        fi
+        while ((1)); do
+            { local state=${${$(<$repo/.mksrv-state)[1]}:-finished} } 2>&1
+            if (( Plugins[MSERV_FLOCK_AVAIL] )) || [[ $state == finished ]]; then
+                (
+                    # Try to gain lock if flock is available.
+                    if ! zsystem flock -t 0 $repo/$Plugins[MSERV_LOCK_FILE] &>/dev/null
+                    then
+                        if (( $? != 2 )) && [[ $state == finished ]]; then
+                            :
+                        else
+                            m {208}Warning:%fWaiting for background {70}make%f to finish…
+                            sleep 1
+                            continue
+                        fi
+                    fi
+                    # Regular sentinels in case of lack of flock.
+                    command touch $repo/.mksrv-lock
+                    command make -C $repo $@
+                    command rm -f $repo/.mksrv-lock
+                    return 1
+                ) || break
+            fi
+        done
+        if (( !$#opt_forw )); then
+            m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
+                by {220}make-server%f, was running {39}make %fdirectly…
+        fi
     fi
     return
 fi

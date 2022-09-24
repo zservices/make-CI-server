@@ -20,6 +20,9 @@ you can either:
 
 The default config file will be provided after first run of the service.
 
+If the project in which `zmake` is run isn't managed by `make-server`,
+`zmake` will forward all arguments to the regular `make` binary.
+
 # OPTIONS
 
 -h/--help       Usage message
@@ -31,6 +34,8 @@ The default config file will be provided after first run of the service.
 -w/--warn       Last build with warnings
 
 -n/--null       Last no-actions make output
+
+-f/--forward    Explicitly forwards all arguments to the make binary.
 
 # RESOURCES
 *Project web site:* https://github.com/zservices/make-server

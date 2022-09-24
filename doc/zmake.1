@@ -23,6 +23,10 @@ colon separated list; e.g.:
 or edit \[ti]/.config/mkserv/make-server.conf\[ga].
 .PP
 The default config file will be provided after first run of the service.
+.PP
+If the project in which \f[C]zmake\f[R] is run isn\[cq]t managed by
+\f[C]make-server\f[R], \f[C]zmake\f[R] will forward all arguments to the
+regular \f[C]make\f[R] binary.
 .SH OPTIONS
 .PP
 -h/\[en]help Usage message
@@ -34,6 +38,8 @@ The default config file will be provided after first run of the service.
 -w/\[en]warn Last build with warnings
 .PP
 -n/\[en]null Last no-actions make output
+.PP
+-f/\[en]forward Explicitly forwards all arguments to the make binary.
 .SH RESOURCES
 .PP
 \f[I]Project web site:\f[R] https://github.com/zservices/make-server

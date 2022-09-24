@@ -26,7 +26,7 @@ export MSERV_DIR MSERV_INTERVAL MSERV_SRC_DIRS MSERV_ARGS
 # The functions/scripts provided by the plugin
 autoload -Uz zmake
 
-zmodload zsh/stat zsh/datetime
+zmodload zsh/stat zsh/datetime zsh/system
 
 if [[ -n $MSERV_SETUP_ALIAS ]]; then
     alias make=zmake
