@@ -134,6 +134,9 @@ if (( $#opt_help )); then
     return 01
 fi
 
+# Any additional argument means normal `make` run.
+opt_forw+=( $@ )
+
 find_repo .mksrv-state
 
 if [[ -z $REPLY ]] || (($#opt_forw)); then
