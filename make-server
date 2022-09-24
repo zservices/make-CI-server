@@ -39,7 +39,7 @@ path+=( $Plugins[MSERV_DIR]/functions )
 run_command()
 {
     # In case running bare script, without plugin manager
-    local ZSRV_THIS_CACHE=${ZSRV_THIS_CACHE:-${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.config}}/makesrv}
+    local ZSRV_THIS_CACHE=${ZSRV_THIS_CACHE:-${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}}/makesrv}
     local cmd=$1 prj=$2:h \
         prjlog=$2 tmplog=/tmp/$2:t cachelog=$ZSRV_THIS_CACHE/$2:t
     shift 2 # Now $@ contains remaining strings – command options.
@@ -58,6 +58,9 @@ run_command()
 
 local -a match mbegin mend
 local MATCH; integer MBEGIN MEND
+
+[[ -n $1 ]] && { source "$1" || return 1;}
+
 # -T ties a comma separated scalar with an array.
 local -TUx MSERV_SRC_DIRS in_src_dirs
 local -TUx SRC_DIRS src_dirs
@@ -160,7 +163,7 @@ while ((1)); do
         # Run make catching its output.
         #
 
-        # Three locations: /tmp, ~/.config/cache/…, and project dir
+        # Three locations: /tmp, ~/.cache/…, and project dir
         # via a refactored function that outputs to them.
         repeat 1 { run_command "$make -C $prj" $prj/$datfle ${=args[i]} }
         print ongoing $datfle $REPLY >! $prj/.mksrv-state

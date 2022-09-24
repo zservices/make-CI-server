@@ -20,6 +20,7 @@ if [[ ${+zsh_loaded_plugins} == 0 || $zsh_loaded_plugins[(I)*/make-server] == 0 
     : ${ZSRV_WORK_DIR:=$0:h} ${ZSRV_ID:=make}
     export ZSRV_WORK_DIR ZSRV_ID
 fi
+ZSRV_WORK_DIR=${ZSRV_WORK_DIR%/.}
 
 # Allow but strip non-number format codes, for future expansions
 m() {
@@ -45,7 +46,9 @@ local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
         srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \
         srv_loclogfile=$ZSRV_THIS_DIR/$ZSRV_ID.log \
         srv_cachelogfile=$ZSRV_THIS_CACHE/$ZSRV_ID.log \
-        config=${XDG_CONFIG_HOME:-$HOME/.config}}/make-server.conf
+        config=${XDG_CONFIG_HOME:-$HOME/.config}/makesrv/make-server.conf
+
+command mkdir -p $config:h
 
 # Test to detect lack of service'' ice if loaded from a plugin manager.
 if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
