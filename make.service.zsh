@@ -29,10 +29,11 @@ m() {
 }
 
 # Own global and exported variables.
-typeset -gx ZERO=$0 ZSRV_DIR=${0:h} ZSRV_CACHE=$ZSH_CACHE_DIR:h/makesrv
+typeset -gx ZERO=$0 ZSRV_THIS_DIR=${0:h} \
+    ZSRV_THIS_CACHE=${${ZSH_CACHE_DIR:+$ZSH_CACHE_DIR:h}:-${XDG_CACHE-HOME:-$HOME/.cache}}/makesrv
 integer -gx ZSRV_PID
 typeset -gA Plugins
-Plugins+=( MSERV_DIR "$ZSRV_DIR" 
+Plugins+=( MSERV_DIR "$ZSRV_THIS_DIR" 
     MSERV_INTERVAL "${MSERV_INTERVAL:=5}"
     MSERV_SRC_DIRS "$MSERV_SRC_DIRS"
     MSERV_ARGS "$MSERV_ARGS"
@@ -42,15 +43,18 @@ export MSERV_DIR MSERV_INTERVAL MSERV_SRC_DIRS MSERV_ARGS
 
 local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
         srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \
-        srv_loclogfile=$ZSRV_DIR/$ZSRV_ID.log \
-        srv_cachelogfile=$ZSRV_CACHE/$ZSRV_ID.log \
-        config=$ZSRV_DIR/make-server.conf
+        srv_loclogfile=$ZSRV_THIS_DIR/$ZSRV_ID.log \
+        srv_cachelogfile=$ZSRV_THIS_CACHE/$ZSRV_ID.log \
+        config=${XDG_CONFIG_HOME:-$HOME/.config}}/make-server.conf
 
 # Test to detect lack of service'' ice if loaded from a plugin manager.
 if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
     m {208}Error{39}:{70} plugin \`{174}zservices/make-server{70}\` needs to be loaded as service, aborting.
     return 1
 fi
+
+[[ -r $config ]] || config=$ZSRV_THIS_DIR/make-server.conf
+m ZSERVICE: Using config: $config
 
 if [[ -r $config ]]; then
     { local pid=$(<$pidfile); } 2>/dev/null
@@ -69,7 +73,7 @@ if [[ -r $config ]]; then
         # Output to three locations, one under Zinit home, second
         # in the plugin directory, third under ZICACHE/../{service-name}.log.0
         command mkdir -p $srv_cachelogfile:h
-        command $ZSRV_DIR/make-server $config &>>!$srv_logfile &>>!$srv_loclogfile \
+        command $ZSRV_THIS_DIR/make-server $config &>>!$srv_logfile &>>!$srv_loclogfile \
                             &>>!$srv_cachelogfile &
         # Remember PID of the server.
         ZSRV_PID=$!

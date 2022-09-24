@@ -39,9 +39,9 @@ path+=( $Plugins[MSERV_DIR]/functions )
 run_command()
 {
     # In case running bare script, without plugin manager
-    local ZSRV_CACHE=${ZSRV_CACHE:-${XDG_CACHE_HOME:-$HOME/.config}/makesrv}
+    local ZSRV_THIS_CACHE=${ZSRV_THIS_CACHE:-${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.config}}/makesrv}
     local cmd=$1 prj=$2:h \
-        prjlog=$2 tmplog=/tmp/$2:t cachelog=$ZSRV_CACHE/$2:t
+        prjlog=$2 tmplog=/tmp/$2:t cachelog=$ZSRV_THIS_CACHE/$2:t
     shift 2 # Now $@ contains remaining strings – command options.
 
     if [[ $cmd = REMOVE ]]; then
