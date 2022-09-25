@@ -11,8 +11,6 @@
 0="${${ZERO:-${0:#$ZSH_ARGZERO}}:-${(%):-%N}}"
 0="${${(M)0:#/*}:-$PWD/$0}"
 
-MSERV_SRC_DIRS=${MSERV_SRC_DIRS//(#b)((#s)|:)\~/$match[1]$HOME}
-
 # Allow running the plugin as script if one desires (e.g. for debugging).
 # The if checks if loaded from plugin manager or if the standard
 # ZSRV_* vars are provided by it.
@@ -39,13 +37,15 @@ ZSRV_THIS_CACHE+=/makesrv
 
 integer -gx ZSRV_PID
 typeset -gA Plugins
-Plugins+=( MSERV_DIR "$ZSRV_THIS_DIR" 
-    MSERV_INTERVAL "${MSERV_INTERVAL:=5}"
-    MSERV_SRC_DIRS "$MSERV_SRC_DIRS"
-    MSERV_ARGS "$MSERV_ARGS"
-)
+Plugins+=( MSERV_DIR "${0:h}"
+    MSERV_CONF_INTERVAL "${MSERV_CONF_INTERVAL:=5}"
+    MSERV_CONF_DIRS "$MSERV_CONF_DIRS"
+    MSERV_CONF_ARGS "$MSERV_CONF_ARGS"
+    MSERV_CONF_PAUSE_AFTER "${MSERV_CONF_PAUSE_AFTER:=30}" 
+    MSERV_CONF_SETUP_ALIAS "$MSERV_CONF_SETUP_ALIAS" )
 
-export MSERV_DIR MSERV_INTERVAL MSERV_SRC_DIRS MSERV_ARGS
+export MSERV_DIR MSERV_CONF_INTERVAL MSERV_CONF_DIRS \
+    MSERV_CONF_ARGS MSERV_CONF_PAUSE_AFTER MSERV_CONF_SETUP_ALIAS
 
 local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
         srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \

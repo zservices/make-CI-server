@@ -14,8 +14,8 @@ in given, configured directories.
 Background service which compiles configured list of projects. To set it up
 you can either:
 
- - export MSERV_SRC_DIRS variable supplying the projects' dirs via
-   a colon separated list; e.g.: `export MSERV_SRC_DIRS={path1}:{path2}:…`,
+ - export MSERV_CONF_DIRS variable supplying the projects' dirs via
+   a colon separated list; e.g.: `export MSERV_CONF_DIRS={path1}:{path2}:…`,
  - or edit ~/.config/mkserv/make-server.conf`.
 
 and then run `./make-server ~/.config/mksrv/make-server.conf`, for example.
@@ -26,7 +26,7 @@ run it in background either by executing `make.service.zsh` or by using
 make-server:
 
 ```zsh
-zinit service'make' param'MSERV_SRC_DIRS->~/github/project' for \
+zinit service'make' param'MSERV_CONF_DIRS->~/github/project' for \
                 zservices/make-server`
 ```
 
@@ -36,13 +36,13 @@ You can get the current full list of other `MSERV_*` variables by
 looking at make-server.conf. The (rather also complete) register of
 them is:
 
-- *`MSERV_SRC_DIRS`* - a colon separated list of paths to the project
+- *`MSERV_CONF_DIRS`* - a colon separated list of paths to the project
                         to compile,
-- *`MSERV_INTERVAL`* - an integer which is the number of seconds between
+- *`MSERV_CONF_INTERVAL`* - an integer which is the number of seconds between
                         build attempts,
-- *`MSERV_ARGS`* - a colon separated list of argument given to `make`
-                    command, e.g.: `MSERV_ARGS=-j3:-C doc`,
-- *`MSERV_PAUSE_AFTER`* - an integet which is the number of `make` builds
+- *`MSERV_CONF_ARGS`* - a colon separated list of argument given to `make`
+                    command, e.g.: `MSERV_CONF_ARGS=-j3:-C doc`,
+- *`MSERV_CONF_PAUSE_AFTER`* - an integet which is the number of `make` builds
                     yielding no difference in their output before sleeping
                     any future build on them if not unlocked.
 

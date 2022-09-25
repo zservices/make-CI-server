@@ -14,8 +14,8 @@ Zmake is an command line interface to the `make-server` background
 service which compiles configured list of projects. To set up it
 you can either:
 
- - export MSERV_SRC_DIRS variable supplying the projects' dirs via
-   a colon separated list; e.g.: `export MSERV_SRC_DIRS={path1}:{path2}:…`,
+ - export MSERV_CONF_DIRS variable supplying the projects' dirs via
+   a colon separated list; e.g.: `export MSERV_CONF_DIRS={path1}:{path2}:…`,
  - or edit ~/.config/mkserv/make-server.conf`.
 
 The default config file will be provided after first run of the service.

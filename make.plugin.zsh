@@ -17,18 +17,22 @@ if [[ ${zsh_loaded_plugins[-1]} != */make-server && -z ${fpath[(r)${0:h}]} ]] {
 # Standard hash for plugins, to not pollute the namespace
 typeset -gA Plugins
 Plugins+=( MSERV_DIR "${0:h}"
-    MSERV_INTERVAL "${MSERV_INTERVAL:=5}"
-    MSERV_SRC_DIRS "$MSERV_SRC_DIRS"
-    MSERV_ARGS "$MSERV_ARGS" )
+    MSERV_CONF_INTERVAL "${MSERV_CONF_INTERVAL:=5}"
+    MSERV_CONF_DIRS "$MSERV_CONF_DIRS"
+    MSERV_CONF_ARGS "$MSERV_CONF_ARGS"
+    MSERV_CONF_PAUSE_AFTER "${MSERV_CONF_PAUSE_AFTER:=30}" 
+    MSERV_CONF_SETUP_ALIAS "$MSERV_CONF_SETUP_ALIAS" )
 
-export MSERV_DIR MSERV_INTERVAL MSERV_SRC_DIRS MSERV_ARGS
+# Make the variables used by make-server exported.
+export MSERV_DIR MSERV_CONF_INTERVAL MSERV_CONF_DIRS \
+    MSERV_CONF_ARGS MSERV_CONF_PAUSE_AFTER MSERV_CONF_SETUP_ALIAS
 
 # The functions/scripts provided by the plugin
 autoload -Uz zmake
 
 zmodload zsh/stat zsh/datetime zsh/system
 
-if [[ -n $MSERV_SETUP_ALIAS ]]; then
+if [[ -n $MSERV_CONF_SETUP_ALIAS && $MSERV_CONF_SETUP_ALIAS != (no|false|0) ]]; then
     alias make=zmake
 fi
 
