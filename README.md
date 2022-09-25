@@ -13,18 +13,29 @@ blocking of terminal. You can also request last log of given *type*, i.e.:
 - last warning-only build: `zmake -w/--warn`,
 - last error build: `zmake -e/--err`.
 
+## TL;DR Documentation
+
+- [zmake](https://github.com/zservices/make-server/blob/main/doc/zmake.md)
+  tool to interface with the background service,
+- [make-server](https://github.com/zservices/make-server/blob/main/doc/zmake.md)
+  - the background build service.
+
+You can use `Zinit`'s service feature to run exaclty one copy of the build
+service process (see next section) or run it yourself simply via `./make-server`.
+
 ## [zinit](https://github.com/zdharma-continuum/zinit)
 
-A service-plugin needs a plugin manager that supports loading single plugin
-instance per all active Zsh sessions, in background. zinit supports this, just
-add:
+A service-plugin (i.e.: the file `make.service.zsh`) can use a plugin manager
+that supports loading single plugin instance per all active Zsh sessions,
+in background. For example, `Zinit` supports this, add:
 
 ```zsh
 zinit param'MSERV_CONF_DIRS->{path to project:path to project:…}' service'make' \
         zservices/make-server
 ```
 
-to `~/.zshrc`.
+to `~/.zshrc` to have `make-server` automatically run in background in one of
+your zsh sessions..
 
 ## Explanation of Zsh-spawned services
 

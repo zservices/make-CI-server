@@ -3,20 +3,19 @@
 % 2022
 
 # NAME
-zmake - the interface to the `make-server` build service which runs `make` for each configured projects in background
+**zmake** - the interface to the `make-server` build service which runs `make` for each configured projects in background
 
 # SYNOPSIS
 *zmake* -h/--help -c/--clean -e/--err -w/--warn -n/--null
 
 # DESCRIPTION
 
-Zmake is an command line interface to the `make-server` background 
-service which compiles configured list of projects. To set up it
-you can either:
+Zmake is tbe CLI interface to the `make-server` background service which
+compiles configured list of projects. To set up it you can either:
 
- - export MSERV_CONF_DIRS variable supplying the projects' dirs via
+ - export **`MSERV_CONF_DIRS`** variable supplying the projects' dirs via
    a colon separated list; e.g.: `export MSERV_CONF_DIRS={path1}:{path2}:…`,
- - or edit ~/.config/mkserv/make-server.conf`.
+ - or edit **`~/.config/mkserv/make-server.conf`**.
 
 The default config file will be provided after first run of the service.
 

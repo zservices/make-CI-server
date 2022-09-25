@@ -47,7 +47,7 @@ them is:
                     any future build on them if not unlocked.
 
 # RESOURCES
-**Project web site:** https://github.com/zservices/make-server
+*Project web site:* https://github.com/zservices/make-server
 
 # COPYING
 
