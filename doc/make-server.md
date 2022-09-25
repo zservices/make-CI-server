@@ -3,7 +3,7 @@
 % 2022
 
 # NAME
-make-server - the (expected) background script that performs periodical `make` executions
+make-server - the (expected/but non-necessary) background script that performs periodical `make` executions
 in given, configured directories.
 
 # SYNOPSIS
@@ -36,18 +36,18 @@ You can get the current full list of other `MSERV_*` variables by
 looking at make-server.conf. The (rather also complete) register of
 them is:
 
-- *`MSERV_CONF_DIRS`* - a colon separated list of paths to the project
+- **`MSERV_CONF_DIRS`** - a colon separated list of paths to the project
                         to compile,
-- *`MSERV_CONF_INTERVAL`* - an integer which is the number of seconds between
+- **`MSERV_CONF_INTERVAL`** - an integer which is the number of seconds between
                         build attempts,
-- *`MSERV_CONF_ARGS`* - a colon separated list of argument given to `make`
+- **`MSERV_CONF_ARGS`** - a colon separated list of argument given to `make`
                     command, e.g.: `MSERV_CONF_ARGS=-j3:-C doc`,
-- *`MSERV_CONF_PAUSE_AFTER`* - an integet which is the number of `make` builds
+- **`MSERV_CONF_PAUSE_AFTER`** - an integet which is the number of `make` builds
                     yielding no difference in their output before sleeping
                     any future build on them if not unlocked.
 
 # RESOURCES
-*Project web site:* https://github.com/zservices/make-server
+**Project web site:** https://github.com/zservices/make-server
 
 # COPYING
 
