@@ -30,7 +30,7 @@ standard output.
 
 - [zmake](https://github.com/zservices/make-server/blob/main/doc/zmake.md) -
   tool to interface with the background service,
-- [make-server](https://github.com/zservices/make-server/blob/main/doc/zmake.md) -
+- [make-server](https://github.com/zservices/make-server/blob/main/doc/make-server.md) -
   the background build service.
 
 You can use `Zinit`'s service feature to run exaclty one copy of the build
