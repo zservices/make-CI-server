@@ -17,8 +17,8 @@ blocking of terminal. You can also request last log of given *type*, i.e.:
 
 - [zmake](https://github.com/zservices/make-server/blob/main/doc/zmake.md)
   tool to interface with the background service,
-- [make-server](https://github.com/zservices/make-server/blob/main/doc/zmake.md)
-  - the background build service.
+- [make-server](https://github.com/zservices/make-server/blob/main/doc/zmake.md) -
+  the background build service.
 
 You can use `Zinit`'s service feature to run exaclty one copy of the build
 service process (see next section) or run it yourself simply via `./make-server`.
