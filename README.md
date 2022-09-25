@@ -15,7 +15,7 @@ blocking of terminal. You can also request last log of given *type*, i.e.:
 
 ## TL;DR Documentation
 
-- [zmake](https://github.com/zservices/make-server/blob/main/doc/zmake.md)
+- [zmake](https://github.com/zservices/make-server/blob/main/doc/zmake.md) -
   tool to interface with the background service,
 - [make-server](https://github.com/zservices/make-server/blob/main/doc/zmake.md) -
   the background build service.

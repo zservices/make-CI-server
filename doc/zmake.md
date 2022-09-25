@@ -10,8 +10,9 @@
 
 # DESCRIPTION
 
-Zmake is tbe CLI interface to the `make-server` background service which
-compiles configured list of projects. To set up it you can either:
+Zmake is tbe CLI interface to the `make-server` background service (that
+compiles configured list of projects). To set up the service and use
+zmake to control it you can either:
 
  - export **`MSERV_CONF_DIRS`** variable supplying the projects' dirs via
    a colon separated list; e.g.: `export MSERV_CONF_DIRS={path1}:{path2}:…`,
