@@ -61,7 +61,11 @@ if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
     return 1
 fi
 
-[[ -r $config ]] || config=$ZSRV_THIS_DIR/make-server.conf
+if [[ ! -f $config ]]; then
+    command cp -f $ZSRV_THIS_DIR/make-server.conf $config || \
+        config=$ZSRV_THIS_DIR/make-server.conf
+fi
+
 m ZSERVICE: Using config: $config
 
 if [[ -r $config ]]; then
@@ -81,8 +85,8 @@ if [[ -r $config ]]; then
         # Output to three locations, one under Zinit home, second
         # in the plugin directory, third under ZICACHE/../{service-name}.log.0
         command mkdir -p $srv_cachelogfile:h
-        command $ZSRV_THIS_DIR/make-server $config &>>!$srv_logfile &>>!$srv_loclogfile \
-                            &>>!$srv_cachelogfile &
+        command $ZSRV_THIS_DIR/make-server $config &>>!$srv_logfile \
+                            &>>!$srv_loclogfile &>>!$srv_cachelogfile &
         # Remember PID of the server.
         ZSRV_PID=$!
     }
