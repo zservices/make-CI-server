@@ -1,7 +1,7 @@
 # make-server
 
 Make server that runs in background for configured projects and periodically
-builds them (i.e.: executes `make`) catching its output and exposing them
+builds them (i.e.: executes `make`) catching their outputs and exposing them
 interactively via `zmake` command.
 
 If your project's build is started earlier in the background, `zmake` will
@@ -12,6 +12,8 @@ blocking of terminal. You can also request last log of given *type*, i.e.:
 - last null build (no actions taken by the `Makefile`/`make`): `zmake -n/--null`,
 - last warning-only build: `zmake -w/--warn`,
 - last error build: `zmake -e/--err`.
+
+`make-server` remembers last log output for each o the kinds above.
 
 ## TL;DR Documentation
 
