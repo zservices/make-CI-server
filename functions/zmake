@@ -145,6 +145,7 @@ if [[ -z $REPLY ]] || (($#opt_forw)); then
     if [[ -z $repo ]]; then
         m {208}%BError:%f%b no {140}make-server%f managed directory nor regular {39}Makefile%f project found in PWD and uptree, exiting…
     else
+        command rm -f $repo/.mksrv-sleep
         if (( !$#opt_forw )); then
             m {208}%BWarning:%f%b the project {140}$repo:t%f isn\'t managed \
             by {220}make-server%f, running {39}make %fdirectly…
@@ -182,6 +183,8 @@ if [[ -z $REPLY ]] || (($#opt_forw)); then
 fi
 
 repo=$REPLY
+command rm -f $repo/.mksrv-sleep
+
 # Parse the --warn/-w --err/-e --clean/-c --info/-i options.
 
 # Examine state.
