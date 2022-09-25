@@ -14,15 +14,18 @@
 MSERV_SRC_DIRS=${MSERV_SRC_DIRS//(#b)((#s)|:)\~/$match[1]$HOME}
 
 # Allow running the plugin as script if one desires (e.g. for debugging).
-# The if checks if loaded from plugin manager.
-if [[ ${+zsh_loaded_plugins} == 0 || $zsh_loaded_plugins[(I)*/make-server] == 0 ]]; then
+# The if checks if loaded from plugin manager or if the standard
+# ZSRV_* vars are provided by it.
+if [[ ${+zsh_loaded_plugins} == 0 || $zsh_loaded_plugins[(I)*/make-server] == 0 || \
+    -z $ZSRV_WORK_DIR || -z $ZSRV_ID ]]; then
     typeset -gx ZSRV_WORK_DIR ZSRV_ID
     : ${ZSRV_WORK_DIR:=$0:h} ${ZSRV_ID:=make}
     export ZSRV_WORK_DIR ZSRV_ID
 fi
 ZSRV_WORK_DIR=${ZSRV_WORK_DIR%/.}
 
-# Allow but strip non-number format codes, for future expansions
+# Allow but strip non-number format codes, for future expansions.
+# Implemented by `m` function/script.
 m() {
     # No redundancy – reuse…
     $Plugins[MSERV_DIR]/functions/m "$@" \
@@ -31,7 +34,9 @@ m() {
 
 # Own global and exported variables.
 typeset -gx ZERO=$0 ZSRV_THIS_DIR=${0:h} \
-    ZSRV_THIS_CACHE=${${ZSH_CACHE_DIR:+$ZSH_CACHE_DIR:h}:-${XDG_CACHE-HOME:-$HOME/.cache}}/makesrv
+    ZSRV_THIS_CACHE=${${ZSH_CACHE_DIR:+$ZSH_CACHE_DIR:h}:-${XDG_CACHE-HOME:-$HOME/.cache}}
+ZSRV_THIS_CACHE+=/makesrv
+
 integer -gx ZSRV_PID
 typeset -gA Plugins
 Plugins+=( MSERV_DIR "$ZSRV_THIS_DIR" 
