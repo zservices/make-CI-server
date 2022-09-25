@@ -15,6 +15,17 @@ blocking of terminal. You can also request last log of given *type*, i.e.:
 
 `make-server` remembers last log output for each o the kinds above.
 
+## Log files
+
+`make-server` outputs messages that are forwarded to *two* different
+locations:
+
+- `~/.cache/makesrv/make.log`,
+- `{path to the plugin directory}/make.log`.
+
+If you run the `make-server` command manually, the logs go to the
+standard output.
+
 ## TL;DR Documentation
 
 - [zmake](https://github.com/zservices/make-server/blob/main/doc/zmake.md) -
@@ -32,12 +43,14 @@ that supports loading single plugin instance per all active Zsh sessions,
 in background. For example, `Zinit` supports this, add:
 
 ```zsh
-zinit param'MSERV_CONF_DIRS->{path to project:path to project:…}' service'make' \
-        zservices/make-server
+zinit lucid service'make' param'MSERV_CONF_DIRS→~/Dokumenty/neo-mc:~/github/tig;
+        MSERV_CONF_SETUP_ALIAS→1; MSERV_CONF_INTERVAL→10' for \
+            zservices/make-server
 ```
 
 to `~/.zshrc` to have `make-server` automatically run in background in one of
-your zsh sessions..
+your zsh sessions, with `make` aliased to `zmake` to little help with muscle
+memory, with 10 seconds between each build.
 
 ## Explanation of Zsh-spawned services
 

@@ -48,7 +48,6 @@ export MSERV_DIR MSERV_CONF_INTERVAL MSERV_CONF_DIRS \
     MSERV_CONF_ARGS MSERV_CONF_PAUSE_AFTER MSERV_CONF_SETUP_ALIAS
 
 local pidfile=$ZSRV_WORK_DIR/$ZSRV_ID.pid \
-        srv_logfile=$ZSRV_WORK_DIR/$ZSRV_ID.log \
         srv_loclogfile=$ZSRV_THIS_DIR/$ZSRV_ID.log \
         srv_cachelogfile=$ZSRV_THIS_CACHE/$ZSRV_ID.log \
         config=${XDG_CONFIG_HOME:-$HOME/.config}/makesrv/make-server.conf
@@ -85,7 +84,7 @@ if [[ -r $config ]]; then
         # Output to three locations, one under Zinit home, second
         # in the plugin directory, third under ZICACHE/../{service-name}.log.0
         command mkdir -p $srv_cachelogfile:h
-        command $ZSRV_THIS_DIR/make-server $config &>>!$srv_logfile \
+        command $ZSRV_THIS_DIR/make-server $config \
                             &>>!$srv_loclogfile &>>!$srv_cachelogfile &
         # Remember PID of the server.
         ZSRV_PID=$!
