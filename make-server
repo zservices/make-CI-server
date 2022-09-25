@@ -205,6 +205,7 @@ while ((1)); do
         #
 
         prev_tpe=${$(<$prj/.mksrv-upmost)[1]}
+
         # Update count of distinct events ignoring the null runs
         # and also request a new temporary file generation by Data[]=.
         if [[ $tpe != $prev_tpe && $tpe != null ]]; then
