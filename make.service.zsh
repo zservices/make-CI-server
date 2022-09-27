@@ -3,9 +3,9 @@
 # A z-service file that runs redis database server (redis-server).
 #
 # Use with plugin manager that supports single plugin load per all
-# active Zsh sessions. The p-m should set parameters `ZSRV_WORK_DIR`
+# active Zsh sessions. The p-msg should set parameters `ZSRV_WORK_DIR`
 # and `ZSRV_ID`.
-# These are the only two variables obtained from p-m and should
+# These are the only two variables obtained from p-msg and should
 # be exported (apart from ZERO).
 
 0="${${ZERO:-${0:#$ZSH_ARGZERO}}:-${(%):-%N}}"
@@ -23,10 +23,10 @@ fi
 ZSRV_WORK_DIR=${ZSRV_WORK_DIR%/.}
 
 # Allow but strip non-number format codes, for future expansions.
-# Implemented by `m` function/script.
-m() {
+# Implemented by `msg` function/script.
+msg() {
     # No redundancy – reuse…
-    $Plugins[MSERV_DIR]/functions/m "$@" \
+    $Plugins[MSERV_DIR]/functions/msg "$@" \
         >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile;
 }
 
@@ -56,7 +56,7 @@ command mkdir -p $config:h
 
 # Test to detect lack of service'' ice if loaded from a plugin manager.
 if (( !${+ZSRV_WORK_DIR} || !${+ZSRV_ID} )); then
-    m {208}Error{39}:{70} plugin \`{174}zservices/make-server{70}\` needs to be loaded as service, aborting.
+    msg {208}Error{39}:{70} plugin \`{174}zservices/make-server{70}\` needs to be loaded as service, aborting.
     return 1
 fi
 
@@ -65,16 +65,16 @@ if [[ ! -f $config ]]; then
         config=$ZSRV_THIS_DIR/make-server.conf
 fi
 
-m ZSERVICE: Using config: $config
+msg ZSERVICE: Using config: $config
 
 if [[ -r $config ]]; then
     { local pid=$(<$pidfile); } 2>/dev/null
     if [[ ${+commands[pkill]} -eq 1 && $pid = <-> && $pid -gt 0 ]]; then
         if command pkill -HUP -x -F $pidfile; then
-            m ZSERVICE: Stopped previous make-server instance, PID: $pid
+            msg ZSERVICE: Stopped previous make-server instance, PID: $pid
             LANG=C sleep 1.5
         else
-            noglob m ZSERVICE: Previous make-server instance (PID:$pid) not running.
+            noglob msg ZSERVICE: Previous make-server instance (PID:$pid) not running.
         fi
     fi
 
@@ -94,6 +94,6 @@ if [[ -r $config ]]; then
     LANG=C command sleep 0.7
     builtin return 0
 else
-    m ZSERVICE: No readable make-server.conf found, make-server did not run 
+    msg ZSERVICE: No readable make-server.conf found, make-server did not run 
     builtin return 1
 fi

@@ -82,16 +82,16 @@ local -A Hash=( null .mksrv-last-null
 
 # Initial check for empty input.
 if [[ -z ${MSERV_CONF_DIRS##[[:space:]]##} ]]; then
-    m {208}Error{39}:{70} No directories of projects given, \
+    msg {208}Error{39}:{70} No directories of projects given, \
         nothing to manage, exiting…
 fi
 # Iterate over given dirs.
 for prj in $in_src_dirs; do
     if [[ ! -d $prj || ! -r $prj ]]; then
-        m {208}Error{39}:{70} Directory \`{dir}$prj{70}\` \
+        msg {208}Error{39}:{70} Directory \`{dir}$prj{70}\` \
             incorrect, skipping…
     elif [[ ! -r $prj/Makefile ]]; then
-        m {208}Error{39}:{70} Directory \`{dir}$prj{70}\` \
+        msg {208}Error{39}:{70} Directory \`{dir}$prj{70}\` \
             doesn\'t contain a Makefile, skipping…
     else
         src_dirs+=( $prj )
@@ -100,7 +100,7 @@ done
 
 # Final check.
 if ((!$#src_dirs)); then
-    m {208}Error{39}:{70} No suitable directories found, \
+    msg {208}Error{39}:{70} No suitable directories found, \
             exiting the {cmd}make-server{70}…
 fi
 
@@ -139,7 +139,7 @@ while ((1)); do
     for prj in $src_dirs; do
         i+=1
         if [[ ! -f $prj/.mksrv-sleep && $NCnt[$prj] -ge Plugins[MSERV_CONF_PAUSE_AFTER] ]]; then
-            m %B{55}Resuming operation "({208}requested{55})" for {69}$prj
+            msg %B{55}Resuming operation "({208}requested{55})" for {69}$prj
             NCnt[$prj]=0
         fi
         [[ -f $prj/.mksrv-sleep ]] && continue
@@ -151,7 +151,7 @@ while ((1)); do
         if [[ -z $Data[$prj] ]]; then
             count=$Counts[$prj]+1
             Data[$prj]=$(mktemp /tmp/mksrv-$count-for-$prj:t.XXX)
-            m %B{208}MAKE-SERVER%b%f: Project %B{70}$prj:t%f%b \
+            msg %B{208}MAKE-SERVER%b%f: Project %B{70}$prj:t%f%b \
                         new build %B{140}\#$count%f%b initiated.
         fi
         datfle=$Data[$prj]:t
@@ -162,7 +162,7 @@ while ((1)); do
                 if ! zsystem flock -f lockfd -t 0 $prj/$Plugins[MSERV_LOCK_FILE]&>/dev/null
                 then
                     if (($?==2)) || [[ -f $prj/.mksrv-lock ]]; then
-                        m {208}Warning:%f waiting for manual, non-managed \
+                        msg {208}Warning:%f waiting for manual, non-managed \
                             {39}make%f to finish…
                         sleep 1
                         continue
@@ -224,7 +224,7 @@ while ((1)); do
         if ! [[ $tpe == null && $prev_tpe == (warn|clean) ]]; then
             print $tpe $datfle:t $Hash[$tpe]>!$prj/.mksrv-upmost
         fi
-        m {208}MAKE-SERVER:%f Build of {39}$prj:t%f finished with result: %B{140}$tpe%f.
+        msg {208}MAKE-SERVER:%f Build of {39}$prj:t%f finished with result: %B{140}$tpe%f.
         # Remove the output files, whose paths are known
         # to the `run_command` func.
         repeat 1 { run_command REMOVE $prj/$datfle:t; }
@@ -233,7 +233,7 @@ while ((1)); do
         # Update sleep count per project.
         [[ $prev_tpe==$tpe || ! ($tpe != $prev_tpe && $tpe != null) ]] && ((NCnt[$prj]+=1))
         if (( NCnt[$prj] >= $Plugins[MSERV_CONF_PAUSE_AFTER] )); then
-            m %B{55}No change {208}$NCnt[$prj]{55} runs for project \
+            msg %B{55}No change {208}$NCnt[$prj]{55} runs for project \
                 {69}$prj{55} occured, suspending it…
             print $$ >! $prj/.mksrv-sleep
         fi
