@@ -152,7 +152,7 @@ if [[ -z $REPLY ]] || (($#opt_forw)); then
             sleep 1
         fi
         while ((1)); do
-            { local state=${${$(<$repo/.mksrv-state)[1]}:-finished} } 2>&1
+            { local state=${${$(<$repo/.mksrv-state)[1]}:-finished} } &>/dev/null
             if (( Plugins[MSERV_FLOCK_AVAIL] )) || [[ $state == finished ]]; then
                 (
                     # Try to gain lock if flock is available.
