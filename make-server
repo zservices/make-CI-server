@@ -206,7 +206,7 @@ while ((1)); do
         # Check for change to update counts and temp files.
         #
 
-        prev_tpe=${$(<$prj/.mksrv-upmost)[1]}
+        { prev_tpe=${$(<$prj/.mksrv-upmost)[1]};} &>/dev/null
 
         # Update count of distinct events ignoring the null runs
         # and also request a new temporary file generation by Data[]=.
@@ -231,7 +231,7 @@ while ((1)); do
         {exec {lockfd}>&-;}&>/dev/null
 
         # Update sleep count per project.
-        [[ $prev_tpe==$tpe || ! ($tpe != $prev_tpe && $tpe != null) ]] && ((NCnt[$prj]+=1))
+        [[ $prev_tpe == $tpe || ! ($tpe != $prev_tpe && $tpe != null) ]] && ((NCnt[$prj]+=1))
         if (( NCnt[$prj] >= $Plugins[MSERV_CONF_PAUSE_AFTER] )); then
             msg %B{55}No change {208}$NCnt[$prj]{55} runs for project \
                 {69}$prj{55} occured, suspending it…
