@@ -27,7 +27,7 @@ ZSRV_WORK_DIR=${ZSRV_WORK_DIR%/.}
 msg() {
     # No redundancy – reuse…
     $Plugins[MSERV_DIR]/functions/msg "$@" \
-        >>!$srv_logfile >>!$srv_loclogfile >>!$srv_cachelogfile;
+        >>!$srv_loclogfile >>!$srv_cachelogfile;
 }
 
 # Own global and exported variables.
